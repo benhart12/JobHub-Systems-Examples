@@ -1,0 +1,69 @@
+// FIRESTORE SECURITY RULES
+// JobHub Lead Email System
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- ADMIN LIST ----
+    // Replace these with your actual Firebase Auth UIDs.
+    function isAdmin() {
+      return (
+        request.auth.uid == "zuFv95G6LpRDW686BHLHdrp77873" ||
+        request.auth.uid == "2CUUbRRLPthbU2NjjD3K5EpXmag2"
+      );
+    }
+
+    // ---- AUTH CHECK ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ---- LEADS COLLECTION ----
+    match /leads/{leadId} {
+      
+      // A user can read a lead if:
+      // - They are admin
+      // - OR they are assigned to this lead
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        request.auth.uid == resource.data.AssignedTo
+      );
+
+      // A user can write a lead if:
+      // - They are admin
+      // - OR they own the lead (AssignedTo matches their UID)
+      // Prevent non-admins from reassigning leads to other users
+      allow write: if isSignedIn() && (
+        isAdmin() ||
+        (
+          request.auth.uid == resource.data.AssignedTo &&
+          (
+            !('AssignedTo' in request.resource.data) ||
+            request.resource.data.AssignedTo == resource.data.AssignedTo
+          )
+        )
+      );
+
+    }
+
+
+    // ---- USER PROFILES (OPTIONAL) ----
+    // If you store user role/metadata in firestore
+    match /users/{userId} {
+      // Users can read their own profile OR an admin can read
+      allow read: if isSignedIn() &&
+        (request.auth.uid == userId || isAdmin());
+
+      // Users can write ONLY their own profile
+      allow write: if isSignedIn() &&
+        request.auth.uid == userId;
+    }
+
+
+    // ---- DEFAULT DENY ----
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

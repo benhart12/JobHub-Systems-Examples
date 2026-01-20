@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobHub Outreach Dashboard</title>
+    
+    <!-- Firebase SDK v9+ (Modular via CDN compat layer) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    
+    <style>
+        /* ===========================================
+           CSS VARIABLES - JobHub Brand Colors
+           =========================================== */
+        :root {
+            --primary-blue: #3B82F6;
+            --hover-blue: #2563EB;
+            --secondary-dark: #1F2937;
+            --accent-blue: #60A5FA;
+            --success-green: #22C55E;
+            --success-green-light: #86EFAC;
+            --success-green-bg: #DCFCE7;
+            --success-green-dark: #16A34A;
+            --background: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #374151;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            --error-red: #EF4444;
+            --warning-yellow: #F59E0B;
+            --warning-bg: #FEF3C7;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ===========================================
+           LOGIN SCREEN
+           =========================================== */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo h1 {
+            font-size: 2rem;
+            color: var(--primary-blue);
+        }
+
+        .login-logo h1 span {
+            color: var(--secondary-dark);
+        }
+
+        .login-logo p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .login-form .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .login-form .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .login-form .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover {
+            background: var(--hover-blue);
+        }
+
+        .login-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .login-error {
+            background: #FEE2E2;
+            border: 1px solid var(--error-red);
+            color: #991B1B;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+        }
+
+        /* ===========================================
+           HEADER
+           =========================================== */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .logo span {
+            color: var(--secondary-dark);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .logout-btn {
+            padding: 0.4rem 0.8rem;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: var(--error-red);
+            color: white;
+            border-color: var(--error-red);
+        }
+
+        .sync-btn {
+            padding: 0.4rem 0.8rem;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sync-btn:hover {
+            background: var(--hover-blue);
+        }
+
+        .sync-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* ===========================================
+           QUEUE TABS (Chrome-style)
+           =========================================== */
+        .tabs-container {
+            background: var(--secondary-dark);
+            padding: 0.75rem 2rem 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+        }
+
+        .tab {
+            padding: 0.65rem 1.25rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .tab.active {
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .tab-badge {
+            background: var(--primary-blue);
+            color: white;
+            padding: 0.1rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .tab.active .tab-badge {
+            background: var(--primary-blue);
+        }
+
+        .tab:not(.active) .tab-badge {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ===========================================
+           MAIN CONTAINER - TWO COLUMN LAYOUT
+           =========================================== */
+        .main-container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 140px);
+        }
+
+        /* ===========================================
+           LEFT COLUMN - LEAD INFO CARD
+           =========================================== */
+        .lead-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 1.5rem;
+        }
+
+        .lead-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .lead-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .lead-name {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 0.25rem;
+        }
+
+        .lead-company {
+            font-size: 1rem;
+            color: var(--primary-blue);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        .lead-source-badge {
+            background: var(--accent-blue);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .lead-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .lead-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .lead-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .detail-value a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        .sequence-badge {
+            background: var(--secondary-dark);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.not-contacted {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-badge.email-sent {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .status-badge.responded {
+            background: var(--success-green-bg);
+            color: var(--success-green-dark);
+        }
+
+        /* ===========================================
+           RIGHT COLUMN - EMAIL COMPOSER
+           =========================================== */
+        .email-composer {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .composer-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .composer-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .queue-position {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: var(--card-bg);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-input:disabled {
+            background: var(--background);
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            min-height: 250px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        .form-textarea-editable {
+            min-height: 250px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+        }
+
+        .form-textarea-editable:focus {
+            outline: none;
+        }
+
+        .form-textarea-editable a {
+            color: var(--primary-blue);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .form-textarea-editable:empty:before {
+            content: attr(placeholder);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* Email Signature Styles */
+        .email-signature {
+            margin-top: 16px;
+            padding-top: 16px;
+            font-family: Verdana, sans-serif;
+        }
+        
+        .email-signature[contenteditable="false"] {
+            -webkit-user-modify: read-only;
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .signature-divider {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .signature-divider span {
+            width: 16px;
+            height: 1.5px;
+            background-color: #888;
+        }
+        
+        .signature-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #666;
+            margin: 0 0 2px 0;
+            line-height: 1.1;
+        }
+        
+        .signature-title {
+            font-size: 14px;
+            color: #999;
+            margin: 0 0 4px 0;
+            font-weight: 600;
+        }
+        
+        .signature-phone {
+            font-size: 14px;
+            color: #999;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+        
+        .signature-email {
+            font-size: 14px;
+            color: #0066cc;
+            text-decoration: underline;
+            font-weight: 400;
+        }
+        
+        .signature-email:hover {
+            color: #0052a3;
+        }
+
+        .sender-info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Warning banner for missing email */
+        .warning-banner {
+            display: none;
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-yellow);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            color: #92400E;
+            font-size: 0.9rem;
+        }
+
+        .warning-banner.show {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .warning-banner .warning-icon {
+            font-size: 1.2rem;
+        }
+
+        /* ===========================================
+           BUTTONS
+           =========================================== */
+        .button-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .btn-primary:hover {
+            background: var(--hover-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--background);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--error-red);
+            border: 1px solid var(--error-red);
+        }
+
+        .btn-danger:hover {
+            background: var(--error-red);
+            color: white;
+        }
+
+        .btn-next {
+            background: var(--secondary-dark);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #374151;
+        }
+
+        /* ===========================================
+           SUCCESS STATE
+           =========================================== */
+        .success-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(22, 163, 74, 0.15);
+            z-index: 100;
+            animation: successFadeIn 0.3s ease-out;
+        }
+
+        .success-overlay.show {
+            display: block;
+        }
+
+        @keyframes successFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .success-banner {
+            display: none;
+            background: linear-gradient(135deg, var(--success-green) 0%, var(--success-green-dark) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 20px rgba(22, 163, 74, 0.4);
+            animation: slideDown 0.4s ease-out;
+        }
+
+        .success-banner.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .success-banner .checkmark {
+            font-size: 1.3rem;
+            margin-right: 0.5rem;
+        }
+
+        .email-composer.success-state {
+            border: 2px solid var(--success-green);
+            box-shadow: 0 0 30px rgba(22, 163, 74, 0.2);
+        }
+
+        .email-composer.success-state .composer-header {
+            background: var(--success-green-bg);
+            margin: -1.5rem -1.5rem 1.25rem -1.5rem;
+            padding: 1.5rem;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 2px solid var(--success-green);
+        }
+
+        .email-composer.success-state .composer-title {
+            color: var(--success-green-dark);
+        }
+
+        .sent-confirmation {
+            display: none;
+            background: var(--success-green-bg);
+            border: 1px solid var(--success-green);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .sent-confirmation.show {
+            display: block;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .sent-confirmation .big-check {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .sent-confirmation .sent-text {
+            color: var(--success-green-dark);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .sent-confirmation .sent-subtext {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        /* ===========================================
+           ERROR STATE
+           =========================================== */
+        .error-message {
+            display: none;
+            background: #FEE2E2;
+            border: 1px solid var(--error-red);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #991B1B;
+            font-size: 0.9rem;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* ===========================================
+           LOADING STATES
+           =========================================== */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .spinner-dark {
+            border: 2px solid rgba(0,0,0,0.1);
+            border-top-color: var(--primary-blue);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            color: var(--text-muted);
+            gap: 1rem;
+        }
+
+        .loading-screen .spinner {
+            width: 40px;
+            height: 40px;
+            border-width: 3px;
+        }
+
+        /* ===========================================
+           EMPTY QUEUE STATE
+           =========================================== */
+        .empty-state {
+            display: none;
+            text-align: center;
+            padding: 4rem 2rem;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state.show {
+            display: block;
+        }
+
+        .empty-state .emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h2 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===========================================
+           HIDE/SHOW UTILITIES
+           =========================================== */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===========================================
+           RESPONSIVE ADJUSTMENTS
+           =========================================== */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .lead-card {
+                position: static;
+            }
+
+            .sender-info-row {
+                grid-template-columns: 1fr;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ==========================================
+         LOGIN SCREEN
+         ========================================== -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <h1>Job<span>Hub</span></h1>
+                <p>Outreach Dashboard</p>
+            </div>
+            
+            <div class="login-error" id="loginError"></div>
+            
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="you@jobhubpro.io" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MAIN APP (Hidden until authenticated)
+         ========================================== -->
+    <div class="app-container hidden" id="appContainer">
+        <!-- Success Overlay -->
+        <div class="success-overlay" id="successOverlay"></div>
+
+        <!-- Success Banner -->
+        <div class="success-banner" id="successBanner">
+            <span class="checkmark">✓</span> Email sent successfully!
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">Job<span>Hub</span> <span style="font-weight: 400; color: var(--text-muted); font-size: 1rem;">Outreach</span></div>
+            <div class="header-right">
+                <button class="sync-btn" id="syncBtn" onclick="syncSpreadsheet()" title="Sync with Google Sheets">
+                    <span id="syncBtnText">Sync Spreadsheet</span>
+                </button>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">B</div>
+                    <span id="userEmail">ben@jobhubpro.io</span>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </header>
+
+            <!-- Queue Tabs -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" id="tabNewOutreach" onclick="switchQueue('new')">
+                    New Outreach
+                    <span class="tab-badge" id="badgeNew">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-container" id="mainContent">
+            <!-- Loading State -->
+            <div class="loading-screen" id="loadingState">
+                <div class="spinner spinner-dark"></div>
+                <p>Loading leads...</p>
+            </div>
+
+            <!-- Empty Queue State -->
+            <div class="empty-state" id="emptyState">
+                <div class="emoji" id="emptyEmoji">📭</div>
+                <h2 id="emptyTitle">No leads in this queue</h2>
+                <p id="emptyMessage">Check back later or switch to the other queue.</p>
+            </div>
+
+            <!-- Left Column: Lead Information -->
+            <aside class="lead-card hidden" id="leadCard">
+                <div class="lead-card-header">
+                    <div>
+                        <div class="lead-id" id="leadId">L00001</div>
+                        <div class="lead-name" id="leadName">John Smith</div>
+                        <div class="lead-company" id="leadCompany">Smith Custom Homes</div>
+                    </div>
+                    <div class="lead-source-badge" id="leadSource">BEN</div>
+                </div>
+
+                <div class="lead-details">
+                    <div class="lead-detail-row">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value" id="leadEmail">john@smithhomes.com</span>
+                    </div>
+                    <div class="lead-detail-row" id="leadPhoneRow" style="display: none;">
+                        <span class="detail-label">Phone</span>
+                        <span class="detail-value" id="leadPhone">(555) 123-4567</span>
+                    </div>
+                    <div class="lead-detail-row">
+                        <span class="detail-label">Website</span>
+                        <span class="detail-value" id="leadWebsite"><a href="#" target="_blank">smithhomes.com</a></span>
+                    </div>
+                    <div class="lead-detail-row">
+                        <span class="detail-label">Territory</span>
+                        <span class="detail-value" id="leadTerritory">Virginia</span>
+                    </div>
+                    <div class="lead-detail-row">
+                        <span class="detail-label">Date Added</span>
+                        <span class="detail-value" id="leadDateAdded">-</span>
+                    </div>
+                    <div class="lead-detail-row" id="leadNotesRow" style="display: none;">
+                        <span class="detail-label">Notes</span>
+                        <span class="detail-value" id="leadNotes">-</span>
+                    </div>
+                    <div class="lead-detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value"><span class="status-badge not-contacted" id="leadStatus">Not Contacted</span></span>
+                    </div>
+                    <div class="lead-detail-row" id="lastContactedRow" style="display: none;">
+                        <span class="detail-label">Last Contacted</span>
+                        <span class="detail-value" id="leadLastContacted">-</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Column: Email Composer -->
+            <section class="email-composer hidden" id="emailComposer">
+                <div class="composer-header">
+                    <h2 class="composer-title" id="composerTitle">Compose Outreach Email</h2>
+                    <span class="queue-position" id="queuePosition">Lead 1 of 5</span>
+                </div>
+
+                <!-- Warning for missing email -->
+                <div class="warning-banner" id="warningBanner">
+                    <span class="warning-icon">⚠️</span>
+                    <span>This lead has no email address. Please skip or mark as dead.</span>
+                </div>
+
+                <!-- Success Confirmation -->
+                <div class="sent-confirmation" id="sentConfirmation">
+                    <span class="big-check">✓</span>
+                    <div class="sent-text">Email Sent!</div>
+                    <div class="sent-subtext">Click "Next Lead" to continue</div>
+                </div>
+
+                <!-- Error Message -->
+                <div class="error-message" id="errorMessage"></div>
+
+                <!-- Email Form -->
+                <form id="emailForm">
+                    <div class="sender-info-row">
+                        <div class="form-group">
+                            <label class="form-label" for="fromName">From Name</label>
+                            <input type="text" id="fromName" class="form-input" placeholder="Your name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="fromEmail">From / Reply-To Email</label>
+                            <input type="email" id="fromEmail" class="form-input" placeholder="your@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="toEmail">To</label>
+                        <input type="email" id="toEmail" class="form-input" placeholder="recipient@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="subject">Subject</label>
+                        <input type="text" id="subject" class="form-input" placeholder="Email subject line" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="message">Message</label>
+                        <div id="message" class="form-input form-textarea form-textarea-editable" contenteditable="true" placeholder="Write your email..." role="textbox" aria-multiline="true"></div>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="button" class="btn btn-secondary" onclick="skipLead()">Skip</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetToTemplate()">Reset to Template</button>
+                        <button type="button" class="btn btn-danger" onclick="markDead()">Mark Dead</button>
+                        <button type="submit" class="btn btn-primary" id="sendBtn">
+                            <span id="sendBtnText">Send Email</span>
+                        </button>
+                        <button type="button" class="btn btn-next" onclick="nextLead()" id="nextBtn">Next Lead →</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        /* ===========================================
+           FIREBASE CONFIGURATION
+           =========================================== */
+
+				// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+				const firebaseConfig = {
+					apiKey: "AIzaSyBTB0cWWVlGh5dM7m6VBooubp5u6Sl4Uds",
+					authDomain: "jobhub-outreach.firebaseapp.com",
+					projectId: "jobhub-outreach",
+					storageBucket: "jobhub-outreach.firebasestorage.app",
+					messagingSenderId: "705992332578",
+					appId: "1:705992332578:web:73b5e51214e9bb5c0ac17b",
+					measurementId: "G-1ZJ1PHPZYK"
+				};
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const functions = firebase.functions();
+
+        /* ===========================================
+        /* ===========================================
+           STATUS DISPLAY MAPPING
+           =========================================== */
+        const STATUS_DISPLAY = {
+						'Not Contacted': 'Not Contacted',
+						'Email 1 Sent': 'Email 1 Sent',
+						'Responded': 'Responded',
+						'Demo Scheduled': 'Demo Scheduled',
+						'Converted': 'Converted',
+						'Dead': 'Dead'
+				};
+
+        /* ===========================================
+           APPLICATION STATE
+           =========================================== */
+        let currentUser = null;
+        let currentQueue = 'new'; // Only 'new' queue exists now
+        let leads = {
+            new: []
+        };
+        let currentLeadIndex = 0;
+        let emailSent = false;
+        let skippedLeadIds = new Set(); // Track locally skipped leads for this session
+        let currentLead = null; // Store current lead for reset function
+
+        /* ===========================================
+           DOM REFERENCES
+           =========================================== */
+        const elements = {
+            // Auth elements
+            loginScreen: document.getElementById('loginScreen'),
+            appContainer: document.getElementById('appContainer'),
+            loginForm: document.getElementById('loginForm'),
+            loginEmail: document.getElementById('loginEmail'),
+            loginPassword: document.getElementById('loginPassword'),
+            loginBtn: document.getElementById('loginBtn'),
+            loginError: document.getElementById('loginError'),
+            userAvatar: document.getElementById('userAvatar'),
+            userEmail: document.getElementById('userEmail'),
+            
+            // Tab elements
+            tabNewOutreach: document.getElementById('tabNewOutreach'),
+            badgeNew: document.getElementById('badgeNew'),
+            
+            // Content states
+            loadingState: document.getElementById('loadingState'),
+            emptyState: document.getElementById('emptyState'),
+            emptyEmoji: document.getElementById('emptyEmoji'),
+            emptyTitle: document.getElementById('emptyTitle'),
+            emptyMessage: document.getElementById('emptyMessage'),
+            
+            // Lead card elements
+            leadCard: document.getElementById('leadCard'),
+            leadId: document.getElementById('leadId'),
+            leadName: document.getElementById('leadName'),
+            leadCompany: document.getElementById('leadCompany'),
+            leadSource: document.getElementById('leadSource'),
+            leadEmail: document.getElementById('leadEmail'),
+            leadPhone: document.getElementById('leadPhone'),
+            leadPhoneRow: document.getElementById('leadPhoneRow'),
+            leadWebsite: document.getElementById('leadWebsite'),
+            leadTerritory: document.getElementById('leadTerritory'),
+            leadDateAdded: document.getElementById('leadDateAdded'),
+            leadNotes: document.getElementById('leadNotes'),
+            leadNotesRow: document.getElementById('leadNotesRow'),
+            leadStatus: document.getElementById('leadStatus'),
+            lastContactedRow: document.getElementById('lastContactedRow'),
+            leadLastContacted: document.getElementById('leadLastContacted'),
+            
+            // Composer elements
+            emailComposer: document.getElementById('emailComposer'),
+            composerTitle: document.getElementById('composerTitle'),
+            queuePosition: document.getElementById('queuePosition'),
+            warningBanner: document.getElementById('warningBanner'),
+            toEmail: document.getElementById('toEmail'),
+            fromName: document.getElementById('fromName'),
+            fromEmail: document.getElementById('fromEmail'),
+            subject: document.getElementById('subject'),
+            message: document.getElementById('message'),
+            emailForm: document.getElementById('emailForm'),
+            sendBtn: document.getElementById('sendBtn'),
+            sendBtnText: document.getElementById('sendBtnText'),
+            
+            // Status elements
+            successOverlay: document.getElementById('successOverlay'),
+            successBanner: document.getElementById('successBanner'),
+            sentConfirmation: document.getElementById('sentConfirmation'),
+            errorMessage: document.getElementById('errorMessage'),
+            
+            // Sync button
+            syncBtn: document.getElementById('syncBtn'),
+            syncBtnText: document.getElementById('syncBtnText')
+        };
+
+        /* ===========================================
+           AUTHENTICATION HANDLERS
+           =========================================== */
+        
+        // Listen for auth state changes
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                showApp();
+                await loadAllQueues();
+            } else {
+                currentUser = null;
+                showLogin();
+            }
+        });
+
+        // Handle login form submission
+        elements.loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = elements.loginEmail.value.trim();
+            const password = elements.loginPassword.value;
+            
+            elements.loginBtn.disabled = true;
+            elements.loginBtn.textContent = 'Signing in...';
+            hideLoginError();
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                console.error('Login error:', error);
+                showLoginError(getAuthErrorMessage(error.code));
+                elements.loginBtn.disabled = false;
+                elements.loginBtn.textContent = 'Sign In';
+            }
+        });
+
+        // Handle logout
+        function handleLogout() {
+            auth.signOut();
+        }
+
+        function showLogin() {
+            elements.loginScreen.classList.remove('hidden');
+            elements.appContainer.classList.add('hidden');
+        }
+
+        function showApp() {
+            elements.loginScreen.classList.add('hidden');
+            elements.appContainer.classList.remove('hidden');
+            
+            // Update user info in header
+            const email = currentUser.email;
+            elements.userEmail.textContent = email;
+            elements.userAvatar.textContent = email.charAt(0).toUpperCase();
+            
+            // Set from email to logged-in user's email
+            elements.fromEmail.value = email;
+            
+            // Try to get display name or derive from email
+            const displayName = currentUser.displayName || email.split('@')[0];
+            elements.fromName.value = capitalizeWords(displayName.replace(/[._]/g, ' '));
+        }
+
+        function showLoginError(message) {
+            elements.loginError.textContent = message;
+            elements.loginError.classList.add('show');
+        }
+
+        function hideLoginError() {
+            elements.loginError.classList.remove('show');
+        }
+
+        function getAuthErrorMessage(code) {
+            const messages = {
+                'auth/invalid-email': 'Invalid email address.',
+                'auth/user-disabled': 'This account has been disabled.',
+                'auth/user-not-found': 'No account found with this email.',
+                'auth/wrong-password': 'Incorrect password.',
+                'auth/invalid-credential': 'Invalid email or password.',
+                'auth/too-many-requests': 'Too many attempts. Please try again later.'
+            };
+            return messages[code] || 'An error occurred. Please try again.';
+        }
+
+        /* ===========================================
+           FIRESTORE QUERIES
+           =========================================== */
+
+        /**
+         * Load queue and update badge count
+         */
+        async function loadAllQueues() {
+            showLoading();
+            
+            try {
+                // Load new outreach queue
+                leads.new = await fetchNewOutreachLeads();
+                
+                // Update badge count
+                updateBadgeCounts();
+                
+                // Display current queue
+                displayCurrentQueue();
+                
+            } catch (error) {
+                console.error('Error loading queues:', error);
+                showError('Failed to load leads. Please refresh the page.');
+            }
+        }
+
+        /**
+         * Get current user's JHP Lead Source name (for filtering leads)
+         * Maps email addresses to names as they appear in the spreadsheet
+         */
+        function getUserLeadSourceName() {
+            if (!currentUser) return null;
+            
+            // Email to name mapping (as they appear in spreadsheet jhpLeadSource column)
+            const emailToNameMap = {
+                'ben@jobhubpro.io': 'Benjamin Hart',
+                'dawson@jobhubpro.io': 'Dawson Racek'
+            };
+            
+            const email = currentUser.email.toLowerCase();
+            
+            // Check mapping first
+            if (emailToNameMap[email]) {
+                return emailToNameMap[email];
+            }
+            
+            // Fallback: try displayName if available
+            const displayName = currentUser.displayName;
+            if (displayName) {
+                return displayName.trim();
+            }
+            
+            // Final fallback: derive from email
+            const emailName = currentUser.email.split('@')[0];
+            return emailName.charAt(0).toUpperCase() + emailName.slice(1).toLowerCase();
+        }
+
+        /**
+         * Fetch leads for New Outreach queue
+         * Criteria: status == 'Not Contacted' AND jhpLeadSource matches current user (case-insensitive)
+         */
+        async function fetchNewOutreachLeads() {
+            const leadsRef = db.collection('leads');
+            const userLeadSource = getUserLeadSourceName();
+            
+            if (!userLeadSource) {
+                console.warn('Could not determine user lead source name');
+                return [];
+            }
+            
+            console.log('Looking for leads with jhpLeadSource matching:', userLeadSource);
+            
+            // Query for all uncontacted leads first (we'll filter by jhpLeadSource in client due to case sensitivity)
+            const snapshot = await leadsRef
+                .where('status', '==', 'Not Contacted')
+                .orderBy('dateAdded', 'asc')
+                .get();
+            
+            console.log(`Found ${snapshot.docs.length} leads with status "Not Contacted"`);
+            
+            const fetchedLeads = [];
+            
+            for (const doc of snapshot.docs) {
+                const lead = { id: doc.id, ...doc.data() };
+                
+                // Required field validation: Lead ID, Contact Email, Status, JHP Lead Source
+                if (!lead.leadId || !lead.contactEmail || !lead.status || !lead.jhpLeadSource) {
+                    console.log(`Skipping lead ${lead.leadId}: missing required fields`, {
+                        leadId: !!lead.leadId,
+                        contactEmail: !!lead.contactEmail,
+                        status: !!lead.status,
+                        jhpLeadSource: !!lead.jhpLeadSource
+                    });
+                    continue;
+                }
+                
+                // Case-insensitive comparison for jhpLeadSource
+                const leadSourceMatch = lead.jhpLeadSource && 
+                    lead.jhpLeadSource.toString().trim().toLowerCase() === userLeadSource.toString().trim().toLowerCase();
+                
+                if (!leadSourceMatch) {
+                    console.log(`Skipping lead ${lead.leadId}: jhpLeadSource "${lead.jhpLeadSource}" doesn't match "${userLeadSource}"`);
+                    continue;
+                }
+                
+                // Skip locally skipped leads
+                if (skippedLeadIds.has(doc.id)) {
+                    continue;
+                }
+                
+                fetchedLeads.push(lead);
+            }
+            
+            console.log(`Returning ${fetchedLeads.length} leads for user "${userLeadSource}"`);
+            return fetchedLeads;
+        }
+
+
+
+        /**
+         * Update lead after sending email
+         * Simple status change: Not Contacted -> Email 1 Sent
+         */
+        async function updateLeadAfterSend(leadId) {
+            try {
+                const leadRef = db.collection('leads').doc(leadId);
+                
+                await leadRef.update({
+                    status: 'Email 1 Sent'
+                });
+                
+                console.log(`Lead ${leadId} updated: status changed to Email 1 Sent`);
+                return true;
+            } catch (error) {
+                console.error(`Failed to update lead ${leadId} status:`, error);
+                throw error; // Re-throw so calling function can handle it
+            }
+        }
+
+        /**
+         * Move lead to dead_leads collection and remove from leads
+         */
+        async function moveLeadToDead(leadId) {
+            const leadRef = db.collection('leads').doc(leadId);
+            const deadLeadRef = db.collection('dead_leads').doc(leadId);
+            
+            try {
+                await db.runTransaction(async (transaction) => {
+                    const leadDoc = await transaction.get(leadRef);
+                    
+                    if (!leadDoc.exists) {
+                        throw new Error('Lead not found');
+                    }
+                    
+                    const leadData = leadDoc.data();
+                    
+                    // Copy to dead_leads with additional metadata
+                    transaction.set(deadLeadRef, {
+                        ...leadData,
+                        status: 'dead',
+                        markedDeadAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        markedDeadBy: currentUser.uid
+                    });
+                    
+                    // Delete from leads collection
+                    transaction.delete(leadRef);
+                });
+                
+                console.log(`Lead ${leadId} moved to dead_leads`);
+                return true;
+            } catch (error) {
+                console.error('Failed to mark lead as dead:', error);
+                return false;
+            }
+        }
+
+        /* ===========================================
+           UI STATE MANAGEMENT
+           =========================================== */
+
+        function updateBadgeCounts() {
+            elements.badgeNew.textContent = leads.new.length;
+        }
+
+        function switchQueue(queue) {
+            // Only 'new' queue exists now, but keep function for compatibility
+            currentQueue = 'new';
+            currentLeadIndex = 0;
+            emailSent = false;
+            
+            // Update tab styles (only new outreach tab exists)
+            elements.tabNewOutreach.classList.add('active');
+            
+            // Reset states
+            clearSuccessState();
+            clearError();
+            
+            // Display the queue
+            displayCurrentQueue();
+        }
+
+        function displayCurrentQueue() {
+            const currentLeads = leads[currentQueue];
+            
+            hideLoading();
+            
+            if (currentLeads.length === 0) {
+                showEmptyState();
+            } else {
+                hideEmptyState();
+                loadLead(0);
+            }
+        }
+
+        function showLoading() {
+            elements.loadingState.classList.remove('hidden');
+            elements.leadCard.classList.add('hidden');
+            elements.emailComposer.classList.add('hidden');
+            elements.emptyState.classList.remove('show');
+        }
+
+        function hideLoading() {
+            elements.loadingState.classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            elements.emptyState.classList.add('show');
+            elements.leadCard.classList.add('hidden');
+            elements.emailComposer.classList.add('hidden');
+            
+            elements.emptyEmoji.textContent = '📭';
+            elements.emptyTitle.textContent = 'No new leads to contact';
+            elements.emptyMessage.textContent = 'Add more leads to your database or check back later.';
+        }
+
+        function hideEmptyState() {
+            elements.emptyState.classList.remove('show');
+        }
+
+        /* ===========================================
+           LOAD AND DISPLAY LEAD
+           =========================================== */
+
+        async function loadLead(index) {
+            const currentLeads = leads[currentQueue];
+            
+            // Check if we've gone through all leads
+            if (index >= currentLeads.length) {
+                showEmptyState();
+                updateBadgeCounts();
+                return;
+            }
+            
+            currentLeadIndex = index;
+            const lead = currentLeads[index];
+            
+            // Reset states
+            emailSent = false;
+            clearSuccessState();
+            clearError();
+            
+            // Show the UI elements
+            elements.leadCard.classList.remove('hidden');
+            elements.emailComposer.classList.remove('hidden');
+            
+            // Update lead card
+            elements.leadId.textContent = lead.leadId || lead.id;
+            elements.leadName.textContent = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Unknown';
+            elements.leadCompany.textContent = lead.company || 'Unknown Company';
+            elements.leadSource.textContent = lead.jhpLeadSource || 'N/A';
+            elements.leadEmail.textContent = lead.contactEmail || 'No email';
+            
+            // Show/hide phone based on availability
+            if (lead.contactPhone) {
+                elements.leadPhoneRow.style.display = 'flex';
+                elements.leadPhone.textContent = lead.contactPhone;
+            } else {
+                elements.leadPhoneRow.style.display = 'none';
+            }
+            
+            // Website with link
+            if (lead.website) {
+                const cleanUrl = lead.website.replace(/^https?:\/\//, '');
+                elements.leadWebsite.innerHTML = `<a href="${lead.website.startsWith('http') ? lead.website : 'https://' + lead.website}" target="_blank">${cleanUrl}</a>`;
+            } else {
+                elements.leadWebsite.textContent = 'N/A';
+            }
+            
+            elements.leadTerritory.textContent = lead.territory || 'Unknown';
+            
+            // Date Added
+            if (lead.dateAdded) {
+                const dateAdded = lead.dateAdded.toDate ? lead.dateAdded.toDate() : new Date(lead.dateAdded);
+                elements.leadDateAdded.textContent = formatDate(dateAdded);
+            } else {
+                elements.leadDateAdded.textContent = 'Unknown';
+            }
+            
+            // Notes (conditionally shown)
+            if (lead.notes) {
+                elements.leadNotesRow.style.display = 'flex';
+                elements.leadNotes.textContent = lead.notes;
+            } else {
+                elements.leadNotesRow.style.display = 'none';
+            }
+            
+            // Set from name to JHP Lead Source
+            elements.fromName.value = lead.jhpLeadSource || '';
+            
+            // Status badge with styling
+            const status = lead.status || 'Not Contacted';
+            elements.leadStatus.textContent = STATUS_DISPLAY[status] || status;
+            elements.leadStatus.className = 'status-badge';
+            if (status === 'Not Contacted') {
+                elements.leadStatus.classList.add('not-contacted');
+            } else if (status.includes('sent')) {
+                elements.leadStatus.classList.add('email-sent');
+            } else if (['responded', 'demo_scheduled', 'converted'].includes(status)) {
+                elements.leadStatus.classList.add('responded');
+            }
+            
+            // Hide last contacted row (not used in simplified flow)
+            elements.lastContactedRow.style.display = 'none';
+            
+            // Update form fields
+            elements.toEmail.value = lead.contactEmail || '';
+            elements.subject.value = generateSubject(lead);
+            // Store current lead for reset function
+            currentLead = lead;
+            elements.message.innerHTML = generateEmailBody(lead);
+            
+            // Update composer title
+            elements.composerTitle.textContent = 'Compose Outreach Email';
+            
+            // Update queue position
+            elements.queuePosition.textContent = `Lead ${index + 1} of ${currentLeads.length}`;
+            
+            // Handle missing email warning
+            if (!lead.contactEmail) {
+                elements.warningBanner.classList.add('show');
+                elements.sendBtn.disabled = true;
+                elements.toEmail.disabled = true;
+            } else {
+                elements.warningBanner.classList.remove('show');
+                elements.sendBtn.disabled = false;
+                elements.toEmail.disabled = false;
+            }
+        }
+
+        /* ===========================================
+           EMAIL TEMPLATE GENERATORS
+           =========================================== */
+
+        function generateSubject(lead) {
+            return 'Quick question about your builds';
+        }
+
+        /**
+         * Generate email signature HTML based on current user
+         */
+        function generateEmailSignature() {
+            if (!currentUser) return '';
+            
+            const email = currentUser.email.toLowerCase();
+            let signatureData;
+            
+            if (email === 'ben@jobhubpro.io') {
+                signatureData = {
+                    name: 'Ben Hart',
+                    title: 'Co-Founder @ JobHub Pro',
+                    phone: '(540) 250-7414',
+                    email: 'ben@jobhubpro.io'
+                };
+            } else if (email === 'dawson@jobhubpro.io') {
+                signatureData = {
+                    name: 'Dawson Racek',
+                    title: 'Co-Founder @ JobHub Pro',
+                    phone: '(540) 250-7414',
+                    email: 'dawson@jobhubpro.io'
+                };
+            } else {
+                return ''; // No signature for other users
+            }
+            
+            return `<br><br>
+<div style="color:#777; font-family:Arial, sans-serif; font-size:14px; line-height:1.4;" contenteditable="false">
+  <div>--</div>
+  <div style="font-size:18px; font-weight:bold; color:#444;">${signatureData.name}</div>
+  <div style="font-weight:600;">${signatureData.title}</div>
+  <div style="font-weight:600;">${signatureData.phone}</div>
+  <div><a href="mailto:${signatureData.email}">${signatureData.email}</a></div>
+</div>`;
+        }
+
+        function generateEmailBody(lead) {
+            // Get values with placeholders if missing
+            const ownerName = lead.firstName ? `${lead.firstName}${lead.lastName ? ' ' + lead.lastName : ''}` : '{OWNER NAME}';
+            const companyName = lead.company || '{COMPANY NAME}';
+            // PAIN POINT left as literal placeholder for manual editing
+            const demoLink = lead.demoVideoUniqueLink || 'https://jobhubpro.io/demo';
+            const fromName = elements.fromName.value || 'The JobHub Team';
+            
+            // Create masked links (HTML format for email)
+            const jobhubLink = '<a href="https://jobhubpro.io">JobHub</a>';
+            const demoVideoLink = `<a href="${demoLink}">2-minute video</a>`;
+            
+            const bodyText = `Hi ${ownerName}, 
+
+I spent a bit of time on ${companyName}'s site. Sounds like you've seen firsthand how {PAIN POINT} causes friction mid-build.
+
+I'm one of the founders of ${jobhubLink}, a simple client portal we built to help reduce that kind of friction while a job is underway. Here's a short ${demoVideoLink} showing how it works on a real-style project.
+
+Open to a quick conversation to see if this fits how you run jobs?
+
+If this isn't relevant for how you build, no worries at all.
+
+${fromName}`;
+            
+            // Add signature
+            const signature = generateEmailSignature();
+            return bodyText + (signature ? '<br><br>' + signature : '');
+        }
+
+        /* ===========================================
+           SEND EMAIL
+           =========================================== */
+
+        elements.emailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (emailSent) return;
+            
+            const currentLeads = leads[currentQueue];
+            const lead = currentLeads[currentLeadIndex];
+            
+            // Validate message content (contentEditable doesn't support required attribute)
+            const messageContent = elements.message.innerHTML || elements.message.innerText || '';
+            if (!messageContent.trim()) {
+                showError('Please enter an email message.');
+                return;
+            }
+            
+            // Convert contentEditable HTML to proper email HTML format
+            // Create a temporary div to process the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = messageContent;
+            
+            // Process nodes to preserve links and convert line breaks to <br>
+            let formattedMessage = '';
+            const processNode = (node) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    // Preserve text and convert newlines to <br>
+                    const text = node.textContent;
+                    formattedMessage += text.replace(/\n/g, '<br>');
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.tagName === 'A') {
+                        // Preserve anchor tags as-is
+                        const href = node.getAttribute('href') || node.href;
+                        const text = node.textContent;
+                        formattedMessage += `<a href="${href}">${text}</a>`;
+                    } else if (node.tagName === 'BR') {
+                        formattedMessage += '<br>';
+                    } else if (node.tagName === 'DIV' || node.tagName === 'P') {
+                        // Convert div/p to line breaks
+                        Array.from(node.childNodes).forEach(processNode);
+                        if (node.tagName === 'P') {
+                            formattedMessage += '<br><br>';
+                        } else {
+                            formattedMessage += '<br>';
+                        }
+                    } else {
+                        // Process children of other elements
+                        Array.from(node.childNodes).forEach(processNode);
+                    }
+                }
+            };
+            
+            Array.from(tempDiv.childNodes).forEach(processNode);
+            
+            // Clean up: remove extra consecutive <br> tags (max 2)
+            formattedMessage = formattedMessage.replace(/(<br>\s*){3,}/gi, '<br><br>');
+            formattedMessage = formattedMessage.trim();
+            
+            // Disable button and show loading
+            elements.sendBtn.disabled = true;
+            elements.sendBtnText.innerHTML = '<span class="spinner"></span> Sending...';
+            clearError();
+            
+            // Generate plain text version from HTML
+            const textMessage = formattedMessage
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<a[^>]*href=["']([^"']+)["'][^>]*>([^<]+)<\/a>/gi, '$2 ($1)')
+                .replace(/<[^>]+>/g, '')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+            
+            // Get the callable function
+            const sendOutreachEmail = functions.httpsCallable('sendOutreachEmail');
+            
+            try {
+                // Send via SendGrid callable function
+                const result = await sendOutreachEmail({
+                    leadId: lead.id, // Firestore document ID
+                    toEmail: elements.toEmail.value,
+                    subject: elements.subject.value,
+                    html: formattedMessage,
+                    text: textMessage,
+                    testMode: false // Set to true for test sends
+                });
+                
+                console.log('Email sent successfully:', result.data);
+                
+                // Function handles Firestore update, so no need to call updateLeadAfterSend
+                
+                // Mark as sent and show success
+                emailSent = true;
+                showSuccessState();
+                
+                // Remove lead from current queue (it's been processed)
+                currentLeads.splice(currentLeadIndex, 1);
+                updateBadgeCounts();
+                
+            } catch (error) {
+                console.error('Email send failed:', error);
+                
+                // Handle Firebase Functions HttpsError
+                let errorMessage = 'Failed to send email.';
+                if (error.code) {
+                    switch (error.code) {
+                        case 'unauthenticated':
+                            errorMessage = 'You must be logged in to send emails.';
+                            break;
+                        case 'permission-denied':
+                            errorMessage = error.message || 'You do not have permission to send this email.';
+                            break;
+                        case 'not-found':
+                            errorMessage = 'Lead not found.';
+                            break;
+                        case 'failed-precondition':
+                            errorMessage = error.message || 'Cannot send email for this lead.';
+                            break;
+                        case 'invalid-argument':
+                            errorMessage = error.message || 'Invalid email parameters.';
+                            break;
+                        default:
+                            errorMessage = error.message || 'Unknown error occurred.';
+                    }
+                } else {
+                    errorMessage = error.message || 'Unknown error occurred.';
+                }
+                
+                showError(errorMessage);
+                elements.sendBtn.disabled = false;
+                elements.sendBtnText.textContent = 'Send Email';
+            }
+        });
+
+        /* ===========================================
+           SKIP AND DEAD LEAD HANDLERS
+           =========================================== */
+
+        function skipLead() {
+            const currentLeads = leads[currentQueue];
+            const lead = currentLeads[currentLeadIndex];
+            
+            // Add to locally skipped set (won't show again this session)
+            skippedLeadIds.add(lead.id);
+            
+            // Remove from current queue
+            currentLeads.splice(currentLeadIndex, 1);
+            updateBadgeCounts();
+            
+            console.log(`Skipped lead: ${lead.id}`);
+            
+            // Load next lead (or show empty if none left)
+            if (currentLeads.length === 0) {
+                showEmptyState();
+            } else {
+                // Don't increment index since we removed the current one
+                loadLead(currentLeadIndex < currentLeads.length ? currentLeadIndex : 0);
+            }
+        }
+
+        async function markDead() {
+            const currentLeads = leads[currentQueue];
+            const lead = currentLeads[currentLeadIndex];
+            
+            elements.sendBtn.disabled = true;
+            
+            try {
+                await moveLeadToDead(lead.id);
+                
+                // Remove from current queue
+                currentLeads.splice(currentLeadIndex, 1);
+                updateBadgeCounts();
+                
+                console.log(`Marked lead as dead: ${lead.id}`);
+                
+                // Load next lead
+                if (currentLeads.length === 0) {
+                    showEmptyState();
+                } else {
+                    loadLead(currentLeadIndex < currentLeads.length ? currentLeadIndex : 0);
+                }
+            } catch (error) {
+                console.error('Failed to mark lead as dead:', error);
+                showError('Failed to mark lead as dead. Please try again.');
+                elements.sendBtn.disabled = false;
+            }
+        }
+
+        function nextLead() {
+            const currentLeads = leads[currentQueue];
+            
+            // If email was sent, lead was already removed, so just load the same index
+            // If not sent (using Next without sending), move to next index
+            if (!emailSent) {
+                currentLeadIndex++;
+            }
+            
+            // Reset for next lead
+            emailSent = false;
+            clearSuccessState();
+            
+            if (currentLeadIndex >= currentLeads.length) {
+                currentLeadIndex = 0;
+            }
+            
+            if (currentLeads.length === 0) {
+                showEmptyState();
+            } else {
+                loadLead(currentLeadIndex);
+            }
+        }
+
+        /* ===========================================
+           SUCCESS/ERROR STATE HANDLERS
+           =========================================== */
+
+        function showSuccessState() {
+            elements.sendBtnText.textContent = '✓ Sent!';
+            elements.sendBtn.style.background = 'var(--success-green)';
+            
+            // Don't show overlay (green tint)
+            // elements.successOverlay.classList.add('show');
+            
+            // Show banner at top (auto-hide after 2 seconds)
+            elements.successBanner.classList.add('show');
+            setTimeout(() => {
+                elements.successBanner.classList.remove('show');
+            }, 2000);
+            
+            // Show confirmation in composer and green styling
+            elements.sentConfirmation.classList.add('show');
+            elements.emailComposer.classList.add('success-state');
+        }
+
+        function clearSuccessState() {
+            elements.successOverlay.classList.remove('show');
+            elements.successBanner.classList.remove('show');
+            elements.sentConfirmation.classList.remove('show');
+            elements.emailComposer.classList.remove('success-state');
+            
+            elements.sendBtn.style.background = '';
+            elements.sendBtnText.textContent = 'Send Email';
+            elements.sendBtn.disabled = false;
+        }
+
+        function showError(message) {
+            elements.errorMessage.textContent = message;
+            elements.errorMessage.classList.add('show');
+        }
+
+        function clearError() {
+            elements.errorMessage.textContent = '';
+            elements.errorMessage.classList.remove('show');
+        }
+
+        /* ===========================================
+           SYNC SPREADSHEET
+           =========================================== */
+        
+        async function syncSpreadsheet() {
+            const syncBtn = elements.syncBtn;
+            const syncBtnText = elements.syncBtnText;
+            
+            // Disable button and show loading
+            syncBtn.disabled = true;
+            syncBtnText.textContent = 'Syncing...';
+            clearError();
+            
+            try {
+                // Get the function URL - construct it from project config
+                const functionUrl = 'https://manualsheetsync-w4cykzajeq-uc.a.run.app/';
+                
+                const response = await fetch(functionUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                console.log('Sync result:', result);
+                
+                // Show success message
+                showSuccessState();
+                syncBtnText.textContent = '✓ Synced!';
+                
+                // Reload queues after sync
+                setTimeout(async () => {
+                    await loadAllQueues();
+                    syncBtnText.textContent = 'Sync Spreadsheet';
+                    syncBtn.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                showError(`Failed to sync spreadsheet: ${error.message}`);
+                syncBtnText.textContent = 'Sync Spreadsheet';
+                syncBtn.disabled = false;
+            }
+        }
+
+        /* ===========================================
+           RESET TO TEMPLATE
+           =========================================== */
+        
+        function resetToTemplate() {
+            if (!currentLead) return;
+            
+            // Regenerate subject and body from template
+            elements.subject.value = generateSubject(currentLead);
+            elements.message.innerHTML = generateEmailBody(currentLead);
+            
+            // Show confirmation
+            clearError();
+            // Brief visual feedback
+            const originalText = elements.sendBtnText.textContent;
+            elements.sendBtnText.textContent = '✓ Reset';
+            setTimeout(() => {
+                elements.sendBtnText.textContent = originalText;
+            }, 1000);
+        }
+
+        /* ===========================================
+           UTILITY FUNCTIONS
+           =========================================== */
+
+        function formatDate(date) {
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function capitalizeWords(str) {
+            return str.replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        /* ===========================================
+           INITIALIZATION
+           =========================================== */
+
+        console.log('JobHub Outreach Dashboard v2.0 initialized');
+    </script>
+</body>
+</html>

@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobHub Outreach Dashboard</title>
+    
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <style>
+        /* ===========================================
+           CSS VARIABLES - JobHub Brand Colors
+           =========================================== */
+        :root {
+            --primary-blue: #3B82F6;
+            --hover-blue: #2563EB;
+            --secondary-dark: #1F2937;
+            --accent-blue: #60A5FA;
+            --success-green: #22C55E;
+            --success-green-light: #86EFAC;
+            --success-green-bg: #DCFCE7;
+            --success-green-dark: #16A34A;
+            --background: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #374151;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            --error-red: #EF4444;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ===========================================
+           HEADER
+           =========================================== */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .logo span {
+            color: var(--secondary-dark);
+        }
+
+        .progress-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .progress-badge {
+            background: var(--primary-blue);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* ===========================================
+           MAIN CONTAINER - TWO COLUMN LAYOUT
+           =========================================== */
+        .main-container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* ===========================================
+           LEFT COLUMN - LEAD INFO CARD
+           =========================================== */
+        .lead-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 1.5rem;
+        }
+
+        .lead-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .lead-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .lead-name {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 0.25rem;
+        }
+
+        .lead-company {
+            font-size: 1rem;
+            color: var(--primary-blue);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        .lead-source-badge {
+            background: var(--accent-blue);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .lead-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .lead-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .lead-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .detail-value a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        .sequence-badge {
+            background: var(--secondary-dark);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            background: #FEF3C7;
+            color: #92400E;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* ===========================================
+           RIGHT COLUMN - EMAIL COMPOSER
+           =========================================== */
+        .email-composer {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .composer-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .composer-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: var(--card-bg);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            min-height: 280px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        /* Sender info row */
+        .sender-info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* ===========================================
+           BUTTONS
+           =========================================== */
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: var(--hover-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--background);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-next {
+            background: var(--secondary-dark);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #374151;
+        }
+
+        /* ===========================================
+           SUCCESS STATE - THE GREEN CELEBRATION
+           =========================================== */
+        .success-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(22, 163, 74, 0.15);
+            z-index: 100;
+            animation: successFadeIn 0.3s ease-out;
+        }
+
+        .success-overlay.show {
+            display: block;
+        }
+
+        @keyframes successFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .success-banner {
+            display: none;
+            background: linear-gradient(135deg, var(--success-green) 0%, var(--success-green-dark) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 20px rgba(22, 163, 74, 0.4);
+            animation: slideDown 0.4s ease-out;
+        }
+
+        .success-banner.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .success-banner .checkmark {
+            font-size: 1.3rem;
+            margin-right: 0.5rem;
+        }
+
+        /* Success state on email composer */
+        .email-composer.success-state {
+            border: 2px solid var(--success-green);
+            box-shadow: 0 0 30px rgba(22, 163, 74, 0.2);
+        }
+
+        .email-composer.success-state .composer-header {
+            background: var(--success-green-bg);
+            margin: -1.5rem -1.5rem 1.25rem -1.5rem;
+            padding: 1.5rem;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 2px solid var(--success-green);
+        }
+
+        .email-composer.success-state .composer-title {
+            color: var(--success-green-dark);
+        }
+
+        .sent-confirmation {
+            display: none;
+            background: var(--success-green-bg);
+            border: 1px solid var(--success-green);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .sent-confirmation.show {
+            display: block;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .sent-confirmation .big-check {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .sent-confirmation .sent-text {
+            color: var(--success-green-dark);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .sent-confirmation .sent-subtext {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        /* ===========================================
+           ERROR STATE
+           =========================================== */
+        .error-message {
+            display: none;
+            background: #FEE2E2;
+            border: 1px solid var(--error-red);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #991B1B;
+            font-size: 0.9rem;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* ===========================================
+           LOADING SPINNER
+           =========================================== */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===========================================
+           END OF LEADS STATE
+           =========================================== */
+        .end-state {
+            display: none;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .end-state.show {
+            display: block;
+        }
+
+        .end-state .emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .end-state h2 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .end-state p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===========================================
+           RESPONSIVE ADJUSTMENTS
+           =========================================== */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .lead-card {
+                position: static;
+            }
+
+            .sender-info-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Success Overlay (green tint on whole page) -->
+    <div class="success-overlay" id="successOverlay"></div>
+
+    <!-- Success Banner (top of page) -->
+    <div class="success-banner" id="successBanner">
+        <span class="checkmark">✓</span> Email sent successfully!
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">Job<span>Hub</span> <span style="font-weight: 400; color: var(--text-muted); font-size: 1rem;">Outreach</span></div>
+        <div class="progress-indicator">
+            <span>Lead</span>
+            <span class="progress-badge" id="progressBadge">1 of 5</span>
+        </div>
+    </header>
+
+    <!-- Main Two-Column Layout -->
+    <main class="main-container" id="mainContent">
+        <!-- Left Column: Lead Information -->
+        <aside class="lead-card" id="leadCard">
+            <div class="lead-card-header">
+                <div>
+                    <div class="lead-id" id="leadId">L00001</div>
+                    <div class="lead-name" id="leadName">John Smith</div>
+                    <div class="lead-company" id="leadCompany">Smith Custom Homes</div>
+                </div>
+                <div class="lead-source-badge" id="leadSource">BEN</div>
+            </div>
+
+            <div class="lead-details">
+                <div class="lead-detail-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value" id="leadEmail">john@smithhomes.com</span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Phone</span>
+                    <span class="detail-value" id="leadPhone">(555) 123-4567</span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Website</span>
+                    <span class="detail-value" id="leadWebsite"><a href="#" target="_blank">smithhomes.com</a></span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Employees</span>
+                    <span class="detail-value" id="leadEmployees">12</span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Years in Business</span>
+                    <span class="detail-value" id="leadYears">8</span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Owner Age</span>
+                    <span class="detail-value" id="leadOwnerAge">45</span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Territory</span>
+                    <span class="detail-value" id="leadTerritory">Virginia</span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Sequence Step</span>
+                    <span class="detail-value"><span class="sequence-badge" id="leadSequence">1</span></span>
+                </div>
+                <div class="lead-detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value"><span class="status-badge" id="leadStatus">New Lead</span></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Column: Email Composer -->
+        <section class="email-composer" id="emailComposer">
+            <div class="composer-header">
+                <h2 class="composer-title">Compose Outreach Email</h2>
+            </div>
+
+            <!-- Success Confirmation (shows after send) -->
+            <div class="sent-confirmation" id="sentConfirmation">
+                <span class="big-check">✓</span>
+                <div class="sent-text">Email Sent!</div>
+                <div class="sent-subtext">Click "Next Lead" to continue</div>
+            </div>
+
+            <!-- Error Message -->
+            <div class="error-message" id="errorMessage"></div>
+
+            <!-- Email Form -->
+            <form id="emailForm">
+                <!-- Sender Info Row -->
+                <div class="sender-info-row">
+                    <div class="form-group">
+                        <label class="form-label" for="fromName">From Name</label>
+                        <input type="text" id="fromName" class="form-input" value="Ben Hart" placeholder="Your name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="fromEmail">From Email</label>
+                        <input type="email" id="fromEmail" class="form-input" value="ben@jobhubportal.com" placeholder="your@email.com">
+                    </div>
+                </div>
+
+                <!-- Recipient -->
+                <div class="form-group">
+                    <label class="form-label" for="toEmail">To</label>
+                    <input type="email" id="toEmail" class="form-input" placeholder="recipient@example.com" required>
+                </div>
+
+                <!-- Subject -->
+                <div class="form-group">
+                    <label class="form-label" for="subject">Subject</label>
+                    <input type="text" id="subject" class="form-input" placeholder="Email subject line" required>
+                </div>
+
+                <!-- Email Body -->
+                <div class="form-group">
+                    <label class="form-label" for="message">Message</label>
+                    <textarea id="message" class="form-input form-textarea" placeholder="Write your email..." required></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="button-row">
+                    <button type="button" class="btn btn-secondary" onclick="skipLead()">Skip Lead</button>
+                    <button type="submit" class="btn btn-primary" id="sendBtn">
+                        <span id="sendBtnText">Send Email</span>
+                    </button>
+                    <button type="button" class="btn btn-next" onclick="nextLead()" id="nextBtn">Next Lead →</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- End of Leads State -->
+        <div class="end-state" id="endState">
+            <div class="emoji">🎉</div>
+            <h2>All Done!</h2>
+            <p>You've reviewed all leads in the queue.</p>
+            <button class="btn btn-primary" onclick="resetToStart()">Start Over</button>
+        </div>
+    </main>
+
+    <script>
+        /* ===========================================
+           EMAILJS CONFIGURATION
+           ===========================================
+           
+           INSTRUCTIONS:
+           1. Sign up at https://www.emailjs.com/
+           2. Create an Email Service (connect your Gmail, etc.)
+           3. Create an Email Template with these variables:
+              - {{to_email}}
+              - {{from_email}}
+              - {{reply_to}}
+              - {{name}}
+              - {{subject}}
+              - {{{message}}}  <-- triple braces for HTML support
+           4. Replace the values below with your actual IDs
+        */
+        
+        const EMAILJS_CONFIG = {
+            // TODO: Replace with your actual EmailJS Public Key
+            publicKey: 'QGSoXaKxDK3gVHsCk',
+            
+            // Your service ID (already provided)
+            serviceId: 'service_g8dzxch',
+            
+            // Your template ID (already provided)
+            templateId: 'template_lead_outreach'
+        };
+
+        /* ===========================================
+           SAMPLE LEADS DATA
+           ===========================================
+           In Phase 2, this will come from Firestore.
+           For now, it's hardcoded for testing.
+        */
+        const LEADS = [
+            {
+                leadId: 'L00001',
+                source: 'BEN',
+                firstName: 'John',
+                lastName: 'Smith',
+                company: 'Smith Custom Homes',
+                website: 'https://smithcustomhomes.com',
+                email: 'john@smithcustomhomes.com',
+                phone: '(540) 555-1234',
+                employees: 12,
+                yearsInBusiness: 8,
+                ownerAge: 45,
+                lastContactedAt: null,
+                sequenceStep: 1,
+                status: 'New Lead',
+                demoVideoLink: 'https://jobhubportal.com/demo/abc123',
+                territory: 'Virginia',
+                dateAdded: '2025-01-15'
+            },
+            {
+                leadId: 'L00002',
+                source: 'BEN',
+                firstName: 'Sarah',
+                lastName: 'Johnson',
+                company: 'Johnson Builders LLC',
+                website: 'https://johnsonbuilders.com',
+                email: 'sarah@johnsonbuilders.com',
+                phone: '(919) 555-5678',
+                employees: 25,
+                yearsInBusiness: 15,
+                ownerAge: 52,
+                lastContactedAt: null,
+                sequenceStep: 1,
+                status: 'New Lead',
+                demoVideoLink: 'https://jobhubportal.com/demo/def456',
+                territory: 'North Carolina',
+                dateAdded: '2025-01-16'
+            },
+            {
+                leadId: 'L00003',
+                source: 'COFOUNDER',
+                firstName: 'Mike',
+                lastName: 'Williams',
+                company: 'Williams Premier Homes',
+                website: 'https://williamspremierhomes.com',
+                email: 'mike@williamspremierhomes.com',
+                phone: '(804) 555-9012',
+                employees: 8,
+                yearsInBusiness: 5,
+                ownerAge: 38,
+                lastContactedAt: '2025-01-10',
+                sequenceStep: 2,
+                status: 'Email 1 Sent',
+                demoVideoLink: 'https://jobhubportal.com/demo/ghi789',
+                territory: 'Virginia',
+                dateAdded: '2025-01-10'
+            },
+            {
+                leadId: 'L00004',
+                source: 'BEN',
+                firstName: 'Emily',
+                lastName: 'Davis',
+                company: 'Davis Dream Homes',
+                website: 'https://davisdreamhomes.com',
+                email: 'emily@davisdreamhomes.com',
+                phone: '(703) 555-3456',
+                employees: 18,
+                yearsInBusiness: 12,
+                ownerAge: 48,
+                lastContactedAt: null,
+                sequenceStep: 1,
+                status: 'New Lead',
+                demoVideoLink: 'https://jobhubportal.com/demo/jkl012',
+                territory: 'Virginia',
+                dateAdded: '2025-01-17'
+            },
+            {
+                leadId: 'L00005',
+                source: 'COFOUNDER',
+                firstName: 'Robert',
+                lastName: 'Taylor',
+                company: 'Taylor Construction Co',
+                website: 'https://taylorconstruction.com',
+                email: 'robert@taylorconstruction.com',
+                phone: '(336) 555-7890',
+                employees: 35,
+                yearsInBusiness: 20,
+                ownerAge: 55,
+                lastContactedAt: null,
+                sequenceStep: 1,
+                status: 'New Lead',
+                demoVideoLink: 'https://jobhubportal.com/demo/mno345',
+                territory: 'North Carolina',
+                dateAdded: '2025-01-18'
+            }
+        ];
+
+        /* ===========================================
+           APPLICATION STATE
+           =========================================== */
+        let currentLeadIndex = 0;
+        let emailSent = false;
+
+        /* ===========================================
+           DOM REFERENCES
+           =========================================== */
+        const elements = {
+            // Lead card elements
+            leadId: document.getElementById('leadId'),
+            leadName: document.getElementById('leadName'),
+            leadCompany: document.getElementById('leadCompany'),
+            leadSource: document.getElementById('leadSource'),
+            leadEmail: document.getElementById('leadEmail'),
+            leadPhone: document.getElementById('leadPhone'),
+            leadWebsite: document.getElementById('leadWebsite'),
+            leadEmployees: document.getElementById('leadEmployees'),
+            leadYears: document.getElementById('leadYears'),
+            leadOwnerAge: document.getElementById('leadOwnerAge'),
+            leadTerritory: document.getElementById('leadTerritory'),
+            leadSequence: document.getElementById('leadSequence'),
+            leadStatus: document.getElementById('leadStatus'),
+            
+            // Form elements
+            toEmail: document.getElementById('toEmail'),
+            fromName: document.getElementById('fromName'),
+            fromEmail: document.getElementById('fromEmail'),
+            subject: document.getElementById('subject'),
+            message: document.getElementById('message'),
+            emailForm: document.getElementById('emailForm'),
+            sendBtn: document.getElementById('sendBtn'),
+            sendBtnText: document.getElementById('sendBtnText'),
+            nextBtn: document.getElementById('nextBtn'),
+            
+            // UI state elements
+            progressBadge: document.getElementById('progressBadge'),
+            successOverlay: document.getElementById('successOverlay'),
+            successBanner: document.getElementById('successBanner'),
+            sentConfirmation: document.getElementById('sentConfirmation'),
+            errorMessage: document.getElementById('errorMessage'),
+            emailComposer: document.getElementById('emailComposer'),
+            leadCard: document.getElementById('leadCard'),
+            mainContent: document.getElementById('mainContent'),
+            endState: document.getElementById('endState')
+        };
+
+        /* ===========================================
+           EMAIL TEMPLATE GENERATOR
+           ===========================================
+           Generates a personalized email body based on lead data.
+           In Phase 2+, this will be AI-generated.
+        */
+        function generateEmailBody(lead) {
+            // Basic template - customize this for your outreach
+            return `Hi ${lead.firstName},
+
+I came across ${lead.company} and was impressed by what you've built over the past ${lead.yearsInBusiness} years in ${lead.territory}.
+
+I'm reaching out because we've built a client portal specifically for custom home builders like yourself. JobHub helps contractors keep their clients informed throughout the build process—reducing phone calls, preventing miscommunications, and making your business look more professional.
+
+A few builders using JobHub have told us it's saved them 5+ hours per week on client communication alone.
+
+I'd love to show you a quick demo. Would you have 15 minutes this week for a call?
+
+Here's a short video walkthrough if you'd like to see it first: ${lead.demoVideoLink}
+
+Best,
+${elements.fromName.value}
+
+P.S. - No pressure at all. If it's not a fit, just let me know and I won't follow up.`;
+        }
+
+        /* ===========================================
+           DEFAULT SUBJECT LINE GENERATOR
+           =========================================== */
+        function generateSubject(lead) {
+            return `Quick question for ${lead.company}`;
+        }
+
+        /* ===========================================
+           LOAD LEAD INTO UI
+           ===========================================
+           Populates all form fields and lead card with current lead data.
+        */
+        function loadLead(index) {
+            // Check if we've gone through all leads
+            if (index >= LEADS.length) {
+                showEndState();
+                return;
+            }
+
+            const lead = LEADS[index];
+            
+            // Reset states
+            emailSent = false;
+            clearSuccessState();
+            clearError();
+            
+            // Update lead card
+            elements.leadId.textContent = lead.leadId;
+            elements.leadName.textContent = `${lead.firstName} ${lead.lastName}`;
+            elements.leadCompany.textContent = lead.company;
+            elements.leadSource.textContent = lead.source;
+            elements.leadEmail.textContent = lead.email;
+            elements.leadPhone.textContent = lead.phone;
+            
+            // Website with link
+            if (lead.website) {
+                const cleanUrl = lead.website.replace(/^https?:\/\//, '');
+                elements.leadWebsite.innerHTML = `<a href="${lead.website}" target="_blank">${cleanUrl}</a>`;
+            } else {
+                elements.leadWebsite.textContent = 'N/A';
+            }
+            
+            elements.leadEmployees.textContent = lead.employees || 'Unknown';
+            elements.leadYears.textContent = lead.yearsInBusiness || 'Unknown';
+            elements.leadOwnerAge.textContent = lead.ownerAge || 'Unknown';
+            elements.leadTerritory.textContent = lead.territory || 'Unknown';
+            elements.leadSequence.textContent = lead.sequenceStep;
+            elements.leadStatus.textContent = lead.status;
+            
+            // Update form fields
+            elements.toEmail.value = lead.email;
+            elements.subject.value = generateSubject(lead);
+            elements.message.value = generateEmailBody(lead);
+            
+            // Update progress indicator
+            elements.progressBadge.textContent = `${index + 1} of ${LEADS.length}`;
+            
+            // Enable send button
+            elements.sendBtn.disabled = false;
+        }
+
+        /* ===========================================
+           SEND EMAIL VIA EMAILJS
+           =========================================== */
+        async function sendEmail(e) {
+            e.preventDefault();
+            
+            // Don't send if already sent for this lead
+            if (emailSent) {
+                return;
+            }
+            
+            // Show loading state
+            elements.sendBtn.disabled = true;
+            elements.sendBtnText.innerHTML = '<span class="spinner"></span> Sending...';
+            clearError();
+            
+            // Prepare email parameters to match your EmailJS template
+            const templateParams = {
+                to_email: elements.toEmail.value,
+                from_email: elements.fromEmail.value,
+                reply_to: elements.fromEmail.value,
+                name: elements.fromName.value,
+                subject: elements.subject.value,
+                message: elements.message.value
+            };
+            
+            try {
+                // Send via EmailJS
+                const response = await emailjs.send(
+                    EMAILJS_CONFIG.serviceId,
+                    EMAILJS_CONFIG.templateId,
+                    templateParams
+                );
+                
+                console.log('Email sent successfully:', response);
+                
+                // Mark as sent and show success
+                emailSent = true;
+                showSuccessState();
+                
+            } catch (error) {
+                console.error('Email send failed:', error);
+                showError(`Failed to send email: ${error.text || error.message || 'Unknown error'}`);
+                
+                // Re-enable send button on error
+                elements.sendBtn.disabled = false;
+                elements.sendBtnText.textContent = 'Send Email';
+            }
+        }
+
+        /* ===========================================
+           SUCCESS STATE HANDLERS
+           =========================================== */
+        function showSuccessState() {
+            // Update button
+            elements.sendBtnText.textContent = '✓ Sent!';
+            elements.sendBtn.style.background = 'var(--success-green)';
+            
+            // Show all the green goodness
+            elements.successOverlay.classList.add('show');
+            elements.successBanner.classList.add('show');
+            elements.sentConfirmation.classList.add('show');
+            elements.emailComposer.classList.add('success-state');
+            
+            // Auto-hide overlay after 2 seconds (but keep other indicators)
+            setTimeout(() => {
+                elements.successOverlay.classList.remove('show');
+            }, 2000);
+        }
+
+        function clearSuccessState() {
+            elements.successOverlay.classList.remove('show');
+            elements.successBanner.classList.remove('show');
+            elements.sentConfirmation.classList.remove('show');
+            elements.emailComposer.classList.remove('success-state');
+            
+            // Reset button
+            elements.sendBtn.style.background = '';
+            elements.sendBtnText.textContent = 'Send Email';
+        }
+
+        /* ===========================================
+           ERROR HANDLERS
+           =========================================== */
+        function showError(message) {
+            elements.errorMessage.textContent = message;
+            elements.errorMessage.classList.add('show');
+        }
+
+        function clearError() {
+            elements.errorMessage.textContent = '';
+            elements.errorMessage.classList.remove('show');
+        }
+
+        /* ===========================================
+           NAVIGATION FUNCTIONS
+           =========================================== */
+        function nextLead() {
+            currentLeadIndex++;
+            loadLead(currentLeadIndex);
+        }
+
+        function skipLead() {
+            // Same as next, but we could add logging here in Phase 2
+            console.log(`Skipped lead: ${LEADS[currentLeadIndex].leadId}`);
+            nextLead();
+        }
+
+        function showEndState() {
+            // Hide lead card and composer
+            elements.leadCard.style.display = 'none';
+            elements.emailComposer.style.display = 'none';
+            
+            // Show end state
+            elements.endState.classList.add('show');
+            elements.mainContent.style.gridTemplateColumns = '1fr';
+        }
+
+        function resetToStart() {
+            // Reset state
+            currentLeadIndex = 0;
+            
+            // Show lead card and composer
+            elements.leadCard.style.display = 'block';
+            elements.emailComposer.style.display = 'flex';
+            elements.mainContent.style.gridTemplateColumns = '380px 1fr';
+            
+            // Hide end state
+            elements.endState.classList.remove('show');
+            
+            // Load first lead
+            loadLead(0);
+        }
+
+        /* ===========================================
+           INITIALIZATION
+           =========================================== */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize EmailJS with your public key
+            emailjs.init(EMAILJS_CONFIG.publicKey);
+            
+            // Attach form submit handler
+            elements.emailForm.addEventListener('submit', sendEmail);
+            
+            // Load the first lead
+            loadLead(0);
+            
+            console.log('JobHub Outreach Dashboard initialized');
+            console.log(`Loaded ${LEADS.length} leads`);
+        });
+    </script>
+</body>
+</html>

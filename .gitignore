@@ -1,28 +1,103 @@
-# Firebase build and deployment files
-/firebase-debug.log
-/firebase-debug.*.log
-.firebaserc
+############################################
+# Repo root ignores (applies to everything)
+############################################
 
-# Firebase Hosting
-/firebase.json
-*.cache
-hosting/.cache
-
-# Firebase Functions
-/functions/node_modules/
-/functions/.env
-/functions/package-lock.json
-
-# Firebase Emulators
-/firebase-*.zip
-/.firebase/
-/emulator-ui/
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Environment files (local configs)
-/.env.*
+# Local env files anywhere (safe default)
+.env
+.env.*
+!.env.example
+!.env.sample
+
+
+############################################
+# JobHubOutreach (Firebase) - scoped ignores
+############################################
+
+# Firebase CLI debug logs (note: path is relative to repo root)
+JobHubOutreach/firebase-debug.log
+JobHubOutreach/firebase-debug.*.log
+
+# Firebase state/cache
+JobHubOutreach/.firebase/
+JobHubOutreach/firebase-*.zip
+JobHubOutreach/emulator-ui/
+JobHubOutreach/hosting/.cache/
+JobHubOutreach/*.cache
+JobHubOutreach/docs/
+
+# Firebase Functions
+JobHubOutreach/functions/node_modules/
+JobHubOutreach/functions/.env
+JobHubOutreach/functions/.env.*
+JobHubOutreach/functions/package-lock.json
+JobHubOutreach/functions/.runtimeconfig.json
+
+# Any env files within Outreach (front-end, scripts, etc.)
+JobHubOutreach/.env
+JobHubOutreach/.env.*
+JobHubOutreach/**/.env
+JobHubOutreach/**/.env.*
+
+# Secrets / local-only files currently in Outreach root
+# (If you later want some of these versioned, rename to *.example and unignore)
+JobHubOutreach/Passwords.txt
+JobHubOutreach/SendGridAPIKey.txt
+JobHubOutreach/LeadWebsites.txt
+
+# Optional: ignore any other “secret-ish” text dumps in Outreach
+JobHubOutreach/*secret*.txt
+JobHubOutreach/*key*.txt
+JobHubOutreach/*password*.txt
+
+
+############################################
+# JobHubProperty (Next.js) - scoped ignores
+############################################
+
+# Node deps
+JobHubProperty/**/node_modules/
+
+# Next build output
+JobHubProperty/**/.next/
+JobHubProperty/**/.next/cache/
+JobHubProperty/**/out/
+JobHubProperty/**/.turbo/
+
+# TypeScript / tooling caches
+JobHubProperty/**/.cache/
+JobHubProperty/**/.eslintcache
+JobHubProperty/**/.tsbuildinfo
+
+# Env files
+JobHubProperty/**/.env
+JobHubProperty/**/.env.*
+
+# Test / coverage output
+JobHubProperty/**/coverage/
+
+# Logs
+JobHubProperty/**/*.log
+
+# OS / editor junk
+JobHubProperty/**/.DS_Store
+JobHubProperty/**/Thumbs.db
+JobHubProperty/**/.vscode/
+JobHubProperty/**/.idea/
+
+
+JobHubCore/
