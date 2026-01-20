@@ -32,7 +32,8 @@ pnpm-debug.log*
 JobHubOutreach/firebase-debug.log
 JobHubOutreach/firebase-debug.*.log
 
-# Firebase state/cache
+# Firebase state/cache/config
+JobHubOutreach/firebase.config.js
 JobHubOutreach/.firebase/
 JobHubOutreach/firebase-*.zip
 JobHubOutreach/emulator-ui/
